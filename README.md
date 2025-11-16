@@ -1,3 +1,81 @@
+# Implementation overview
+
+> TL;DR: the required “advertisement code” lives in `public/ad/index.html` and `public/ad/scripts.js`.  
+> The dashboard and ad creation form are implemented as a standalone Vue app in the `frontend` directory.
+
+---
+
+## Where to find `index.html` and `scripts.js`
+
+The two files required by the assignment are located here:
+
+- `public/ad/index.html`  
+  A simple static page used as an **ad preview**.  
+  It loads the widget like this:
+
+  ```html
+  <div id="ad-root"></div>
+  <script src="/ad/scripts.js" data-ad-id="1"></script>
+  ```
+
+  You can change `data-ad-id` to any existing ad ID created via the dashboard.
+
+- `public/ad/scripts.js`  
+  A standalone, framework‑agnostic JavaScript widget that:
+
+    - fetches ad data from the backend API (`GET /api/ads/{id}`),
+    - renders the ad (image + text + link),
+    - injects its own CSS styles into the page,
+    - tracks:
+        - **impressions** – on render (`POST /api/track` with type `impression`),
+        - **clicks** – when the user clicks the image or button (`POST /api/track` with type `click`).
+
+The widget automatically detects the `<script>` tag that loaded it (`<script src=".../ad/scripts.js" data-ad-id="...">`), creates a container if needed, and renders the ad inside it.
+
+### Using the widget on any external page
+
+To display an ad on any page, you only need to include:
+
+```html
+<script src="https://localhost/ad/scripts.js" data-ad-id="AD_ID"></script>
+```
+
+- `src` points to `public/ad/scripts.js` served by the Laravel app,
+- `data-ad-id` is the ID of an ad created via the dashboard.
+
+The widget will handle fetching data, rendering, styling and tracking automatically.
+
+---
+
+## Dashboard & ad creation (frontend)
+
+The dashboard and ad creation flow are implemented as a separate Vue application in the `frontend` directory (as required by the task – Laravel’s built‑in Vite setup is not used).
+
+- **Dashboard**:
+    - lists ads in a table with pagination,
+    - shows per‑ad stats (impressions, clicks, CTR),
+    - provides an action to **copy the embed code** for a given ad.
+
+- **Create Ad** view:
+    - form fields: title, description text, image upload, target URL,
+    - client‑side validation (required fields, URL format, file type & size),
+    - on success:
+        - the newly created ad ID is shown,
+        - a ready‑to‑paste embed snippet is displayed, e.g.:
+
+          ```html
+          <script src="https://localhost/ad/scripts.js" data-ad-id="NEW_AD_ID"></script>
+          ```
+
+This makes it easy to create an ad via the UI and immediately use it on any external page.
+
+---
+---
+---
+---
+---
+---
+
 # fullstack-task-2025
 
 # Setup
