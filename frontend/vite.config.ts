@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import tailwindcss from '@tailwindcss/vite'
 
 export default () => {
   return defineConfig({
@@ -12,6 +13,6 @@ export default () => {
       outDir: "./public",
     },
     base: "/app/",
-    plugins: [vue()],
+    plugins: [vue(),tailwindcss(),],
   });
 };
