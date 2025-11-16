@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('ads')->group(function () {
     Route::post('/', [AdController::class, 'store']);
     Route::get('{id}', [AdController::class, 'show']);
-    Route::get('ad-stats', [AdStatsController::class, 'index']);
 
 });
 
+Route::get('ad-stats', [AdStatsController::class, 'index']);
 Route::post('track', [TrackingController::class, 'store']);
