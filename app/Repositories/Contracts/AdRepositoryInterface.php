@@ -3,7 +3,7 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\Ad;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface AdRepositoryInterface
 {
@@ -11,5 +11,5 @@ interface AdRepositoryInterface
 
     public function find(int $id): ?Ad;
 
-    public function getWithStats(): Collection;
+    public function paginateWithStats(int $perPage = 15): LengthAwarePaginator;
 }

@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Ad;
 use App\Repositories\Contracts\AdRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 class DashboardService
@@ -11,18 +13,21 @@ class DashboardService
         private readonly AdRepositoryInterface $ads,
     ) {}
 
-    public function getAdStats(): Collection
+    public function getAdStatsPaginated(int $perPage = 15): LengthAwarePaginator
     {
-        return $this->ads->getWithStats()
-            ->map(function ($ad) {
-                $impressions = (int) $ad->impressions_count;
-                $clicks      = (int) $ad->clicks_count;
+        $paginator = $this->ads->paginateWithStats($perPage);
 
-                $ad->ctr = $impressions > 0
-                    ? round($clicks / $impressions * 100, 2)
-                    : 0.0;
+        $paginator->getCollection()->transform(function (Ad $ad) {
+            $impressions = (int) ($ad->impressions_count ?? 0);
+            $clicks      = (int) ($ad->clicks_count ?? 0);
 
-                return $ad;
-            });
+            $ad->ctr = $impressions > 0
+                ? round($clicks / $impressions * 100, 2)
+                : 0.0;
+
+            return $ad;
+        });
+
+        return $paginator;
     }
 }

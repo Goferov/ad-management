@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAdRequest;
+use App\Http\Resources\AdResource;
 use App\Services\AdService;
 use Illuminate\Http\JsonResponse;
 
@@ -17,18 +18,16 @@ class AdController extends Controller
     {
         $ad = $this->adService->create($request->validated());
 
-        return response()->json([
-            'data' => $ad,
-        ], 201);
+        return (new AdResource($ad))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function show(int $id): JsonResponse
+    public function show(int $id): AdResource
     {
         $ad = $this->adService->getByIdOrFail($id);
 
-        return response()->json([
-            'data' => $ad,
-        ]);
+        return new AdResource($ad);
     }
 }
 

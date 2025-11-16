@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Ad;
 use App\Repositories\Contracts\AdRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class AdService
 {
@@ -14,6 +16,17 @@ class AdService
 
     public function create(array $data): Ad
     {
+        $image = $data['image'] ?? null;
+
+        if (! $image instanceof UploadedFile) {
+            throw new \InvalidArgumentException('Image file is required');
+        }
+
+        $imageUrl = $this->storeAdImage($image);
+
+        unset($data['image']);
+        $data['image_url'] = $imageUrl;
+
         return $this->ads->create($data);
     }
 
@@ -26,5 +39,12 @@ class AdService
         }
 
         return $ad;
+    }
+
+    private function storeAdImage(UploadedFile $image): string
+    {
+        $path = $image->store('ads', 'public');
+
+        return Storage::disk('public')->url($path);
     }
 }

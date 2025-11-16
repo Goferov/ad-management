@@ -24,8 +24,8 @@ class StoreAdRequest extends FormRequest
         return [
             'title'      => ['required', 'string', 'max:255'],
             'text'       => ['required', 'string'],
-            'image_url'  => ['required', 'url', 'max:2048'],
             'target_url' => ['required', 'url', 'max:2048'],
+            'image'      => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'], // max 5 MB
         ];
     }
 }
