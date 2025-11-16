@@ -152,15 +152,41 @@
                   </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <a
-                                    :href="ad.target_url"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="text-blue-600 hover:text-blue-900"
-                                >
-                                    View
-                                </a>
+                                <div class="flex items-center gap-3">
+                                    <a
+                                        :href="ad.target_url"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="text-blue-600 hover:text-blue-900"
+                                    >
+                                        View
+                                    </a>
+
+                                    <button
+                                        type="button"
+                                        @click="copyEmbed(ad.id)"
+                                        class="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-800"
+                                        :title="copiedAdId === ad.id ? 'Copied!' : 'Copy embed code'"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke-width="2" />
+                                            <path
+                                                stroke-width="2"
+                                                d="M5 15H4a2 2 0 0 1-2-2V4c0-1.1.9-2 2-2h9a2 2 0 0 1 2 2v1"
+                                            />
+                                        </svg>
+                                    </button>
+
+                                    <span
+                                        v-if="copiedAdId === ad.id"
+                                        class="text-xs text-green-600"
+                                    >
+      Copied!
+    </span>
+                                </div>
                             </td>
+
+
                         </tr>
                         </tbody>
                     </table>
@@ -293,6 +319,42 @@ const goToPage = async (page: number): Promise<void> => {
     currentPage.value = page
     await fetchAds()
 }
+
+const scriptUrl =
+    import.meta.env.VITE_AD_SCRIPT_URL || 'http://localhost:8000/ad/scripts.js'
+
+const copiedAdId = ref<number | null>(null)
+
+const copyEmbed = async (adId: number): Promise<void> => {
+    const code = `<script src="${scriptUrl}" data-ad-id="${adId}"><\/script>`
+
+    try {
+        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(code)
+        } else {
+            const textarea = document.createElement('textarea')
+            textarea.value = code
+            textarea.setAttribute('readonly', '')
+            textarea.style.position = 'absolute'
+            textarea.style.left = '-9999px'
+            document.body.appendChild(textarea)
+            textarea.select()
+            document.execCommand('copy')
+            document.body.removeChild(textarea)
+        }
+
+        copiedAdId.value = adId
+
+        setTimeout(() => {
+            if (copiedAdId.value === adId) {
+                copiedAdId.value = null
+            }
+        }, 2000)
+    } catch (err) {
+        console.error('Failed to copy embed code', err)
+    }
+}
+
 
 onMounted(() => {
     fetchAds()

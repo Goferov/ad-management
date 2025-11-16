@@ -1,5 +1,5 @@
 import apiClient from '../api/client'
-import type { Ad, AdStats, CreateAdPayload, ApiResponse, PaginatedResponse } from '../types/ad'
+import type { Ad, CreateAdPayload, ApiResponse, PaginatedResponse, AdStats } from '../types/ad'
 
 export const adService = {
     async createAd(payload: CreateAdPayload): Promise<Ad> {
@@ -14,6 +14,8 @@ export const adService = {
                 'Content-Type': 'multipart/form-data',
             },
         })
+
+        // jeśli backend zwraca { data: { ... } }, to tu zawsze dostaniesz Ad
         return response.data.data
     },
 

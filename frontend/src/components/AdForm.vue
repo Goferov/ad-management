@@ -34,7 +34,6 @@
                 <p v-if="errors.text" class="text-red-500 text-xs mt-1">{{ errors.text }}</p>
             </div>
 
-            <!-- Changed from URL input to file upload -->
             <div>
                 <label for="image" class="block text-sm font-medium text-gray-700 mb-1">
                     Image <span class="text-red-500">*</span>
@@ -47,10 +46,11 @@
                     @change="handleImageChange"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
-                <p class="text-xs text-gray-500 mt-1">Accepted formats: JPG, JPEG, PNG, WEBP (max 5MB)</p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Accepted formats: JPG, JPEG, PNG, WEBP (max 5MB)
+                </p>
                 <p v-if="errors.image" class="text-red-500 text-xs mt-1">{{ errors.image }}</p>
 
-                <!-- Added image preview -->
                 <div v-if="imagePreview" class="mt-3">
                     <img
                         :src="imagePreview"
@@ -81,7 +81,7 @@
             </div>
 
             <div v-if="submitSuccess" class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                Ad created successfully! Redirecting...
+                Ad created successfully!
             </div>
 
             <div class="flex gap-3 pt-2">
@@ -106,59 +106,58 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { reactive, ref } from 'vue'
 import { adService } from '../services/adService'
-import type { CreateAdPayload } from '../types/ad'
+import type { CreateAdPayload, Ad } from '../types/ad'
 
-const router = useRouter()
+const emit = defineEmits<{
+    created: [ad: Ad]
+}>()
 
 const formData = reactive<Omit<CreateAdPayload, 'image'> & { image: File | null }>({
     title: '',
     text: '',
     image: null,
-    target_url: ''
+    target_url: '',
 })
 
 const errors = reactive<Record<string, string>>({})
-const loading = ref<boolean>(false)
+const loading = ref(false)
 const submitError = ref<string | null>(null)
-const submitSuccess = ref<boolean>(false)
+const submitSuccess = ref(false)
 const imagePreview = ref<string | null>(null)
 
 const handleImageChange = (event: Event): void => {
     const target = event.target as HTMLInputElement
     const file = target.files?.[0]
 
-    if (file) {
-        // Validate file
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-        const maxSize = 5 * 1024 * 1024 // 5MB
+    if (!file) return
 
-        if (!validTypes.includes(file.type)) {
-            errors.image = 'Invalid file type. Please upload JPG, JPEG, PNG, or WEBP.'
-            formData.image = null
-            imagePreview.value = null
-            return
-        }
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    const maxSize = 5 * 1024 * 1024
 
-        if (file.size > maxSize) {
-            errors.image = 'File size exceeds 5MB limit.'
-            formData.image = null
-            imagePreview.value = null
-            return
-        }
-
-        delete errors.image
-        formData.image = file
-
-        // Generate preview
-        const reader = new FileReader()
-        reader.onload = (e) => {
-            imagePreview.value = e.target?.result as string
-        }
-        reader.readAsDataURL(file)
+    if (!validTypes.includes(file.type)) {
+        errors.image = 'Invalid file type. Please upload JPG, JPEG, PNG, or WEBP.'
+        formData.image = null
+        imagePreview.value = null
+        return
     }
+
+    if (file.size > maxSize) {
+        errors.image = 'File size exceeds 5MB limit.'
+        formData.image = null
+        imagePreview.value = null
+        return
+    }
+
+    delete errors.image
+    formData.image = file
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+        imagePreview.value = e.target?.result as string
+    }
+    reader.readAsDataURL(file)
 }
 
 const isValidUrl = (url: string): boolean => {
@@ -171,20 +170,17 @@ const isValidUrl = (url: string): boolean => {
 }
 
 const validateForm = (): boolean => {
-    Object.keys(errors).forEach(key => delete errors[key])
+    Object.keys(errors).forEach((key) => delete errors[key])
 
     if (!formData.title.trim()) {
         errors.title = 'Title is required'
     }
-
     if (!formData.text.trim()) {
         errors.text = 'Description is required'
     }
-
     if (!formData.image) {
         errors.image = 'Image is required'
     }
-
     if (!isValidUrl(formData.target_url)) {
         errors.target_url = 'Please enter a valid URL'
     }
@@ -200,32 +196,33 @@ const handleSubmit = async (): Promise<void> => {
     submitSuccess.value = false
 
     try {
-        await adService.createAd(formData as CreateAdPayload)
-        submitSuccess.value = true
+        const payload: CreateAdPayload = {
+            title: formData.title,
+            text: formData.text,
+            image: formData.image,
+            target_url: formData.target_url,
+        }
 
-        setTimeout(() => {
-            router.push('/')
-        }, 1500)
+        const createdAd = await adService.createAd(payload)
+        submitSuccess.value = true
+        emit('created', createdAd)
     } catch (error: any) {
-        submitError.value = error.response?.data?.message || 'Failed to create ad. Please try again.'
+        submitError.value = error?.response?.data?.message || 'Failed to create ad. Please try again.'
     } finally {
         loading.value = false
     }
 }
 
 const resetForm = (): void => {
-    Object.assign(formData, {
-        title: '',
-        text: '',
-        image: null,
-        target_url: ''
-    })
-    Object.keys(errors).forEach(key => delete errors[key])
+    formData.title = ''
+    formData.text = ''
+    formData.image = null
+    formData.target_url = ''
+    Object.keys(errors).forEach((key) => delete errors[key])
     submitError.value = null
     submitSuccess.value = false
     imagePreview.value = null
 
-    // Reset file input
     const fileInput = document.getElementById('image') as HTMLInputElement
     if (fileInput) fileInput.value = ''
 }
