@@ -2,9 +2,9 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\AdEventType;
 use App\Models\AdEvent;
 use App\Repositories\Contracts\AdEventRepositoryInterface;
-use Faker\Provider\Address;
 
 class AdEventRepository implements AdEventRepositoryInterface
 {
@@ -13,7 +13,7 @@ class AdEventRepository implements AdEventRepositoryInterface
     {
     }
 
-    public function create(int $adId, string $type): AdEvent
+    public function create(int $adId, AdEventType $type): AdEvent
     {
         return $this->adEvent->create([
             'ad_id' => $adId,

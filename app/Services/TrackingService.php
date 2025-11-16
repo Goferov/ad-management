@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AdEventType;
 use App\Repositories\Contracts\AdEventRepositoryInterface;
 use App\Repositories\Contracts\AdRepositoryInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -15,14 +16,19 @@ class TrackingService
 
     public function trackImpression(int $adId): void
     {
-        $this->ensureAdExists($adId);
-        $this->events->create($adId, 'impression');
+        $this->createEvent($adId, AdEventType::Impression);
     }
 
     public function trackClick(int $adId): void
     {
+        $this->createEvent($adId, AdEventType::Click);
+    }
+
+    private function createEvent(int $adId, AdEventType $type): void
+    {
         $this->ensureAdExists($adId);
-        $this->events->create($adId, 'click');
+
+        $this->events->create($adId, $type);
     }
 
     private function ensureAdExists(int $adId): void

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\AdEventType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TrackEventRequest;
 use App\Services\TrackingService;
@@ -19,11 +20,12 @@ class TrackingController extends Controller
         $validated = $request->validated();
 
         try {
-            if ($validated['type'] === 'impression') {
-                $this->trackingService->trackImpression($validated['ad_id']);
-            } else {
-                $this->trackingService->trackClick($validated['ad_id']);
-            }
+            $type = AdEventType::from($validated['type']);
+
+            match ($type) {
+                AdEventType::Impression => $this->trackingService->trackImpression($validated['ad_id']),
+                AdEventType::Click      => $this->trackingService->trackClick($validated['ad_id']),
+            };
 
             return response()->json(['status' => 'ok']);
         } catch (ModelNotFoundException $e) {

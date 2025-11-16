@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\AdEventType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class TrackEventRequest extends FormRequest
 {
@@ -23,7 +25,7 @@ class TrackEventRequest extends FormRequest
     {
         return [
             'ad_id' => ['required', 'integer'],
-            'type'  => ['required', 'in:impression,click'],
+            'type'  => ['required', new Enum(AdEventType::class)],
         ];
     }
 }
