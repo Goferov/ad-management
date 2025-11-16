@@ -15,7 +15,6 @@ export const adService = {
             },
         })
 
-        // jeśli backend zwraca { data: { ... } }, to tu zawsze dostaniesz Ad
         return response.data.data
     },
 
